@@ -1,19 +1,20 @@
 import React, { Component } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { getImages } from 'servicesApi/servicesApi';
-import ImageGallery from './ImageGallery/ImageGallery';
+import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
+import { Modal } from './Modal/Modal';
+import { BigImage } from './BigImage/BigImage';
 
 const INIT_REQUEST_PARAMS = {
   perPage: 12,
 };
 
 const STATUS = {
-  IDLE: 'idle',
-  PENDING: 'pending',
-  PAGINATION_PENDIND: 'paginationPendind',
-  RESOLVED: 'resolved',
-  REJECTED: 'rejected',
+  idle: 'idle',
+  pending: 'pending',
+  resolved: 'resolved',
+  rejected: 'rejected',
 };
 
 export class App extends Component {
@@ -22,61 +23,43 @@ export class App extends Component {
     images: [],
     page: 1,
     isNextPage: false,
-    status: STATUS.IDLE,
+    status: STATUS.idle,
     error: null,
+    showModal: false,
+    selectedImage: null,
   };
 
   async componentDidUpdate(prevProps, prevState) {
-    if (prevState.searchName !== this.state.searchName) {
-      this.setState({ status: STATUS.PENDING });
-      setTimeout(async () => {
-        try {
-          const { hits, totalHits } = await getImages(
-            this.state.searchName,
-            1,
-            INIT_REQUEST_PARAMS.perPage
-          );
-          this.setState({
-            images: [...hits],
-            page: 1,
-            isNextPage: this.isNextPage(totalHits, 1),
-            status: STATUS.RESOLVED,
-          });
-          console.log(
-            'Первая загрузка с новым запросом, всего изображений',
-            totalHits,
-            hits
-          );
-        } catch (error) {
-          console.log(error);
-          this.setState({ status: STATUS.REJECTED, error });
-        }
-      }, 500);
-    }
+    if (
+      (prevState.page !== this.state.page && this.state.page !== 1) ||
+      prevState.searchName !== this.state.searchName
+    ) {
+      if (prevState.searchName !== this.state.searchName) {
+        this.setState({
+          images: [],
+          page: 1,
+        });
+      }
 
-    if (prevState.page !== this.state.page && this.state.page !== 1) {
-      this.setState({ status: STATUS.PAGINATION_PENDIND });
-      setTimeout(async () => {
-        try {
-          const { hits, totalHits } = await getImages(
-            this.state.searchName,
-            this.state.page,
-            INIT_REQUEST_PARAMS.perPage
-          );
+      try {
+        this.setState({ status: STATUS.pending });
 
-          this.setState(prevState => {
-            return {
-              images: [...prevState.images, ...hits],
-              isNextPage: this.isNextPage(totalHits, this.state.page),
-              status: STATUS.RESOLVED,
-            };
-          });
-          console.log('Загрузка при смене номера страницы', totalHits, hits);
-        } catch (error) {
-          console.log(error);
-          this.setState({ status: STATUS.REJECTED, error });
-        }
-      }, 500);
+        const { hits, totalHits } = await getImages(
+          this.state.searchName,
+          this.state.page,
+          INIT_REQUEST_PARAMS.perPage
+        );
+
+        this.setState(prevState => {
+          return {
+            images: [...prevState.images, ...hits],
+            isNextPage: this.isNextPage(totalHits, prevState.page),
+            status: STATUS.resolved,
+          };
+        });
+      } catch (error) {
+        this.setState({ status: STATUS.rejected, error });
+      }
     }
   }
 
@@ -89,34 +72,54 @@ export class App extends Component {
   };
 
   onLoadMore = () => {
-    console.log('loadMorePressed');
     this.setState(prevState => {
       return { page: prevState.page + 1 };
     });
   };
 
-  isNextPage = (totalImages, currentPage) => {
-    const totalPages = Math.ceil(totalImages / INIT_REQUEST_PARAMS.perPage);
-    console.log('всего страниц', totalPages);
-    return totalPages > currentPage ? true : false;
+  isNextPage(totalImages, currentPage) {
+    return currentPage < Math.ceil(totalImages / INIT_REQUEST_PARAMS.perPage);
+  }
+
+  onModalClose = () => {
+    this.setState({ showModal: false });
+    document.body.style.overflow = 'auto';
+  };
+
+  onCardClick = id => {
+    const selectedImage = this.state.images.find(image => image.id === id);
+    this.setState({ selectedImage, showModal: true });
+    document.body.style.overflow = 'hidden';
   };
 
   render() {
-    const { status, images, isNextPage, error } = this.state;
+    const { status, images, isNextPage, error, showModal } = this.state;
+
+    const showGallery =
+      (status === STATUS.resolved || isNextPage) && images.length > 0;
+    const showNoImagesWarning = status === STATUS.resolved && !images.length;
+    const showLoader = status === STATUS.pending;
+    const showLoadMore = status === STATUS.resolved && isNextPage;
+    const showError = status === STATUS.rejected;
+
     return (
       <>
         <Searchbar onSubmit={this.onSearchSubmit} />
-        {(status === STATUS.RESOLVED || status === STATUS.PAGINATION_PENDIND) &&
-          images.length > 0 && <ImageGallery images={this.state.images} />}
-        {status === STATUS.RESOLVED && !images.length && (
-          <p>No images found. Try another request</p>
+        {showGallery && (
+          <ImageGallery
+            images={this.state.images}
+            onCardClick={this.onCardClick}
+          />
         )}
-        {(status === STATUS.PENDING ||
-          status === STATUS.PAGINATION_PENDIND) && <p> Loading....</p>}
-        {status === STATUS.RESOLVED && isNextPage && (
-          <Button onLoadMore={this.onLoadMore} />
+        {showNoImagesWarning && <p>No images found. Try another request</p>}
+        {showLoader && <p> Loading....</p>}
+        {showLoadMore && <Button onLoadMore={this.onLoadMore} />}
+        {showError && <p>{`Something went wrong ${error.message}`}</p>}
+        {showModal && (
+          <Modal onModalClose={this.onModalClose}>
+            <BigImage imageData={this.state.selectedImage} />
+          </Modal>
         )}
-        {status === STATUS.REJECTED && <p>{error.message}</p>}
       </>
     );
   }

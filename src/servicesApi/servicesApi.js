@@ -12,6 +12,7 @@ const axios = axios1.create({
 
 export async function getImages(searchName, page, per_page) {
   const params = { q: searchName, per_page, page };
+
   const { data } = await axios.get('', { params });
   return data;
 }
