@@ -19,9 +19,3 @@ export class ImageGalleryItem extends Component {
     );
   }
 }
-
-{
-  /* <li class="gallery-item">
-  <img src="" alt="" />
-</li>; */
-}
