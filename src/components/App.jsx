@@ -5,17 +5,10 @@ import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 import { BigImage } from './BigImage/BigImage';
-
-const INIT_REQUEST_PARAMS = {
-  perPage: 12,
-};
-
-const STATUS = {
-  idle: 'idle',
-  pending: 'pending',
-  resolved: 'resolved',
-  rejected: 'rejected',
-};
+import { AppContainer } from './App.styled';
+import { Loader } from './Loader/Loader';
+import { Informer } from './Informer/Informer';
+import { STATUS, INIT_REQUEST_PARAMS, INFO_TYPES } from 'configs/constants';
 
 export class App extends Component {
   state = {
@@ -103,7 +96,7 @@ export class App extends Component {
     const showError = status === STATUS.rejected;
 
     return (
-      <>
+      <AppContainer>
         <Searchbar onSubmit={this.onSearchSubmit} />
         {showGallery && (
           <ImageGallery
@@ -111,16 +104,24 @@ export class App extends Component {
             onCardClick={this.onCardClick}
           />
         )}
-        {showNoImagesWarning && <p>No images found. Try another request</p>}
-        {showLoader && <p> Loading....</p>}
+        {showNoImagesWarning && (
+          <Informer infoType={INFO_TYPES.notification}>
+            No images found! Try another request.
+          </Informer>
+        )}
+        {showLoader && <Loader />}
         {showLoadMore && <Button onLoadMore={this.onLoadMore} />}
-        {showError && <p>{`Something went wrong ${error.message}`}</p>}
+        {showError && (
+          <Informer infoType={INFO_TYPES.error}>
+            {`Oops, something went wrong! ${error.message}`}
+          </Informer>
+        )}
         {showModal && (
           <Modal onModalClose={this.onModalClose}>
             <BigImage imageData={this.state.selectedImage} />
           </Modal>
         )}
-      </>
+      </AppContainer>
     );
   }
 }

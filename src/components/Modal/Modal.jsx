@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Backdrop, Button, ModalContent } from './Modal.styled';
+import { IoMdCloseCircleOutline } from 'react-icons/io';
 
 export class Modal extends Component {
   componentDidMount() {
@@ -14,7 +15,6 @@ export class Modal extends Component {
   };
 
   onBackdropClick = event => {
-    console.log(event.target);
     if (event.target !== event.currentTarget) {
       return;
     }
@@ -28,7 +28,7 @@ export class Modal extends Component {
       <Backdrop onClick={this.onBackdropClick}>
         <ModalContent>{children}</ModalContent>
         <Button type="button" onClick={onModalClose}>
-          X
+          <IoMdCloseCircleOutline size={30} />
         </Button>
       </Backdrop>
     );
