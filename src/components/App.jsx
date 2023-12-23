@@ -24,16 +24,9 @@ export class App extends Component {
 
   async componentDidUpdate(prevProps, prevState) {
     if (
-      (prevState.page !== this.state.page && this.state.page !== 1) ||
+      prevState.page !== this.state.page ||
       prevState.searchName !== this.state.searchName
     ) {
-      if (prevState.searchName !== this.state.searchName) {
-        this.setState({
-          images: [],
-          page: 1,
-        });
-      }
-
       try {
         this.setState({ status: STATUS.pending });
 
@@ -56,11 +49,13 @@ export class App extends Component {
     }
   }
 
-  onSearchSubmit = event => {
-    event.preventDefault();
-    const searchName = event.currentTarget.elements.name.value.trim();
-    this.setState(prevState => {
-      if (prevState.searchName !== searchName) return { searchName };
+  onSearchSubmit = searchName => {
+    if (this.state.searchName === searchName) return;
+
+    this.setState({
+      searchName,
+      images: [],
+      page: 1,
     });
   };
 
@@ -76,13 +71,11 @@ export class App extends Component {
 
   onModalClose = () => {
     this.setState({ showModal: false });
-    document.body.style.overflow = 'auto';
   };
 
   onCardClick = id => {
     const selectedImage = this.state.images.find(image => image.id === id);
     this.setState({ selectedImage, showModal: true });
-    document.body.style.overflow = 'hidden';
   };
 
   render() {

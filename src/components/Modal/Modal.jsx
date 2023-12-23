@@ -5,6 +5,12 @@ import { IoMdCloseCircleOutline } from 'react-icons/io';
 export class Modal extends Component {
   componentDidMount() {
     window.addEventListener('keydown', this.onEscClick);
+    document.body.style.overflow = 'hidden';
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.onEscClick);
+    document.body.style.overflow = 'auto';
   }
 
   onEscClick = event => {

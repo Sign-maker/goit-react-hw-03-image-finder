@@ -1,21 +1,17 @@
-import React, { Component } from 'react';
 import { Item, Image } from './ImageGalleryItem.styled';
 import { Link } from './ImageGalleryItem.styled';
 
-export class ImageGalleryItem extends Component {
-  onCardClick = event => {
+export const ImageGalleryItem = ({ id, large, thumb, alt, onCardClick }) => {
+  const handleClick = event => {
     event.preventDefault();
-    this.props.onCardClick(this.props.id);
+    onCardClick(id);
   };
 
-  render() {
-    const { large, thumb, alt } = this.props;
-    return (
-      <Item>
-        <Link href={large} onClick={this.onCardClick}>
-          <Image src={thumb} alt={alt} />
-        </Link>
-      </Item>
-    );
-  }
-}
+  return (
+    <Item>
+      <Link href={large} onClick={handleClick}>
+        <Image src={thumb} alt={alt} />
+      </Link>
+    </Item>
+  );
+};
