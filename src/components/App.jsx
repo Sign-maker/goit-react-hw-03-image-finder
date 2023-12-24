@@ -23,16 +23,14 @@ export class App extends Component {
   };
 
   async componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.page !== this.state.page ||
-      prevState.searchName !== this.state.searchName
-    ) {
+    const { searchName, page } = this.state;
+    if (prevState.page !== page || prevState.searchName !== searchName) {
       try {
         this.setState({ status: STATUS.pending });
 
         const { hits, totalHits } = await getImages(
-          this.state.searchName,
-          this.state.page,
+          searchName,
+          page,
           INIT_REQUEST_PARAMS.perPage
         );
 
